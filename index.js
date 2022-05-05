@@ -35,6 +35,27 @@ async function run() {
 
 
         })
+
+        app.post('/inventory', async (req, res) => {
+            const newData = req.body;
+            const result = await database.insertOne(newData)
+            res.send(result)
+        })
+
+        app.put('/inventory/:id', async (req, res) => {
+            const id = req.params.id;
+            const updateQuantity = req.body;
+            console.log(updateQuantity)
+            const filter = { _id: ObjectId(id) }
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: {
+                    quantity: updateQuantity.quantity
+                }
+            };
+            const result = await database.updateOne(filter, updateDoc, options)
+            res.send(result)
+        })
     }
     finally {
 
