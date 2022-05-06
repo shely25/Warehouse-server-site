@@ -42,6 +42,14 @@ async function run() {
             res.send(result)
         })
 
+        app.delete('/inventory/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await database.deleteOne(query);
+            console.log(result)
+            res.send(result)
+        })
+
         app.put('/inventory/:id', async (req, res) => {
             const id = req.params.id;
             const updateQuantity = req.body;
