@@ -25,8 +25,17 @@ async function run() {
         const database1 = client1.db("fasionFranzy").collection("MyItem");
         function tokenVerify(req, res, next) {
             const authHead = req.headers.authorization.split(' ')[1]
-            console.log(authHead)
-            next()
+            if (!authHead) {
+                res.status(401).send({ message: 'Invalid' })
+            }
+            var decoded = jwt.verify(token, process.env.ACCESS_TOKEN, (err, decoded) => {
+                if (err) {
+                    res.status(403).send({ message: "forbidden" })
+                }
+                req.decoded = decoded
+                console.log(req.decoded)
+                next()
+            });
         }
         app.get('/inventory', async (req, res) => {
             const query = {};
@@ -55,12 +64,19 @@ async function run() {
             const result = await database1.insertOne(newData)
             res.send(result)
         })
-        app.get('/myitem', async (req, res) => {
+        app.get('/myitem', tokenVerify, async (req, res) => {
             const query = req.query
+            const email = query.email
+            const verifyEmail = req.decoded.email
+            if (email === verifyEmail) {
+                const cursor = database1.find(query)
+                const result = await cursor.toArray()
+                res.send(result)
+            }
+            // const authHead = req.headers
             // console.log(authHead)
-            const cursor = database1.find(query)
-            const result = await cursor.toArray()
-            res.send(result)
+            // // console.log(authHead)
+
         })
 
         app.delete('/inventory/:id', async (req, res) => {
@@ -94,6 +110,11 @@ async function run() {
         })
 
         app.post('/login', async (req, res) => {
+            const email = req.body
+            var token = jwt.sign(email, process.env.jwtToken);
+            res.send({ token })
+        })
+        app.post('/register', async (req, res) => {
             const email = req.body
             var token = jwt.sign(email, process.env.jwtToken);
             res.send({ token })
