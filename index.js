@@ -64,17 +64,20 @@ async function run() {
             const result = await database1.insertOne(newData)
             res.send(result)
         })
-        app.get('/myitem', tokenVerify, async (req, res) => {
+        app.get('/myitem', async (req, res) => {
             const query = req.query
             const email = query.email
-            const verifyEmail = req.decoded.email
-            if (email === verifyEmail) {
-                const cursor = database1.find(query)
-                const result = await cursor.toArray()
-                res.send(result)
-            }
-            // const authHead = req.headers
-            // console.log(authHead)
+            const cursor = database1.find(query)
+            const result = await cursor.toArray()
+            res.send(result)
+            // const verifyEmail = req.decoded.email
+            // if (email === verifyEmail) {
+            //     const cursor = database1.find(query)
+            //     const result = await cursor.toArray()
+            //     res.send(result)
+            // }
+            const authHead = req.headers
+            console.log(authHead)
             // // console.log(authHead)
 
         })
