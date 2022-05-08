@@ -1,5 +1,6 @@
 const express = require('express')
 const cors = require('cors');
+var jwt = require('jsonwebtoken');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express()
 const dotenv = require('dotenv').config()
@@ -15,10 +16,18 @@ app.get('/', (req, res) => {
 
 const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@cluster0.xku4r.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
+const client1 = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 async function run() {
     try {
         await client.connect();
+        await client1.connect();
         const database = client.db("fasionFranzy").collection("products");
+        const database1 = client1.db("fasionFranzy").collection("MyItem");
+        function tokenVerify(req, res, next) {
+            const authHead = req.headers.authorization.split(' ')[1]
+            console.log(authHead)
+            next()
+        }
         app.get('/inventory', async (req, res) => {
             const query = {};
             const cursor = database.find(query);
@@ -36,9 +45,21 @@ async function run() {
 
         })
 
-        app.post('/inventory', async (req, res) => {
+        // app.post('/inventory', async (req, res) => {
+        //     const newData = req.body;
+        //     const result = await database.insertOne(newData)
+        //     res.send(result)
+        // })
+        app.post('/myitem', async (req, res) => {
             const newData = req.body;
-            const result = await database.insertOne(newData)
+            const result = await database1.insertOne(newData)
+            res.send(result)
+        })
+        app.get('/myitem', async (req, res) => {
+            const query = req.query
+            // console.log(authHead)
+            const cursor = database1.find(query)
+            const result = await cursor.toArray()
             res.send(result)
         })
 
@@ -46,7 +67,14 @@ async function run() {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
             const result = await database.deleteOne(query);
-            console.log(result)
+            //console.log(result)
+            res.send(result)
+        })
+        app.delete('/myitem/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await database1.deleteOne(query);
+            //console.log(result)
             res.send(result)
         })
 
@@ -63,6 +91,12 @@ async function run() {
             };
             const result = await database.updateOne(filter, updateDoc, options)
             res.send(result)
+        })
+
+        app.post('/login', async (req, res) => {
+            const email = req.body
+            var token = jwt.sign(email, process.env.jwtToken);
+            res.send({ token })
         })
     }
     finally {
